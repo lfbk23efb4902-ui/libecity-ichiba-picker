@@ -2,6 +2,7 @@ import random
 import re
 import requests
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 BUDGETS = [1000, 3000, 5000, 10000]
 
@@ -124,28 +125,40 @@ def enrich_shipping(picks: list) -> list:
     return picks
 
 
-def fetch_candidates(budget: int, category_ids: list, max_pages: int = 3) -> list:
+def _fetch_one_page(cat_id: int, page: int, price_max: int) -> list:
+    """1カテゴリ1ページ分を取得してパースする（並列処理用）"""
+    resp = _session.get(
+        f"{BASE_URL}/search",
+        params={"category_id": cat_id, "order": "new", "page": page},
+        timeout=15,
+    )
+    resp.raise_for_status()
+    return _parse_page(resp.text, price_max)
+
+
+def fetch_candidates(budget: int, category_ids: list, max_pages: int = 2) -> list:
     """
     指定カテゴリから budget 以下の商品を候補として収集する。
+    カテゴリ×ページを並列取得して高速化。
     """
-    # 組み合わせ用なので、個別商品の上限は budget の 90% まで
     price_max = int(budget * 0.9)
     seen_urls = set()
     all_products = []
 
-    for cat_id in category_ids:
-        for page in range(1, max_pages + 1):
-            resp = _session.get(
-                f"{BASE_URL}/search",
-                params={"category_id": cat_id, "order": "new", "page": page},
-                timeout=15,
-            )
-            resp.raise_for_status()
+    # 全タスク（カテゴリ×ページ）を並列実行
+    tasks = [(cat_id, page) for cat_id in category_ids for page in range(1, max_pages + 1)]
 
-            for p in _parse_page(resp.text, price_max):
-                if p["url"] not in seen_urls:
-                    seen_urls.add(p["url"])
-                    all_products.append(p)
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(_fetch_one_page, cat_id, page, price_max): (cat_id, page)
+                   for cat_id, page in tasks}
+        for future in as_completed(futures):
+            try:
+                for p in future.result():
+                    if p["url"] not in seen_urls:
+                        seen_urls.add(p["url"])
+                        all_products.append(p)
+            except Exception:
+                pass  # 1ページ失敗しても続行
 
     return all_products
 

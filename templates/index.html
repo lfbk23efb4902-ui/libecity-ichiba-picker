@@ -187,22 +187,12 @@
       gap: 2rem;
       align-items: flex-end;
     }
-    #loadingOverlay .char-wrap img {
-      height: 120px;
-      filter: drop-shadow(0 6px 12px rgba(0,0,0,.15));
-    }
-    .bounce1 { animation: bounce 0.7s ease-in-out infinite alternate; }
-    .bounce2 { animation: bounce 0.7s ease-in-out .35s infinite alternate; transform: scaleX(-1); }
-    @keyframes bounce {
-      from { transform: translateY(0); }
-      to   { transform: translateY(-24px); }
-    }
-    .bounce2 {
-      animation: bounce2 0.7s ease-in-out .35s infinite alternate;
-    }
-    @keyframes bounce2 {
-      from { transform: scaleX(-1) translateY(0); }
-      to   { transform: scaleX(-1) translateY(-24px); }
+    .bounce1 { animation: bounceUp 0.6s ease-in-out infinite alternate; }
+    .bounce2 { animation: bounceUp 0.6s ease-in-out 0.2s infinite alternate; }
+    .bounce3 { animation: bounceUp 0.6s ease-in-out 0.4s infinite alternate; }
+    @keyframes bounceUp {
+      from { transform: translateY(0) scale(1); }
+      to   { transform: translateY(-28px) scale(1.15); }
     }
     .loading-text {
       font-size: 1.2rem;
@@ -231,15 +221,17 @@
 
 <!-- ヘッダー -->
 <header class="site-header">
-  <img class="logo" src="https://ichiba.libecity.com/vite/assets/logo-BUgXlR-9.svg" alt="リベシティ市場">
+  <span style="font-size:1.3rem;">🛒</span>
+  <span style="font-weight:900; font-size:.95rem;">リベシティ市場</span>
   <span class="badge-picker">予算ピッカー</span>
 </header>
 
 <!-- ヒーロー -->
 <div class="hero">
   <div class="hero-chars">
-    <img src="https://ichiba.libecity.com/vite/assets/img_parson02-D_tRwX7C.png" alt="">
-    <img src="https://ichiba.libecity.com/vite/assets/img_parson01-CVCZFRsp.png" alt="">
+    <span style="font-size:4rem; line-height:1; filter:drop-shadow(0 4px 8px rgba(0,0,0,.2));">💰</span>
+    <span style="font-size:4rem; line-height:1; filter:drop-shadow(0 4px 8px rgba(0,0,0,.2));">🛒</span>
+    <span style="font-size:4rem; line-height:1; filter:drop-shadow(0 4px 8px rgba(0,0,0,.2));">🎲</span>
   </div>
   <h1>予算ぴったりを<br>自動でピックアップ！</h1>
   <p>複数の商品を組み合わせて、合計が予算内に収まる<br>お買い物セットを自動で提案します</p>
@@ -313,8 +305,9 @@
 <!-- ローディングオーバーレイ -->
 <div id="loadingOverlay">
   <div class="char-wrap">
-    <img class="bounce1" src="https://ichiba.libecity.com/vite/assets/img_parson01-CVCZFRsp.png" alt="">
-    <img class="bounce2" src="https://ichiba.libecity.com/vite/assets/img_parson02-D_tRwX7C.png" alt="">
+    <span class="bounce1" style="font-size:4rem;">🛍️</span>
+    <span class="bounce2" style="font-size:4rem;">💰</span>
+    <span class="bounce3" style="font-size:4rem;">🎲</span>
   </div>
   <div class="loading-text">ぴったりな商品を探し中…</div>
   <div class="loading-dots">
