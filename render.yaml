@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: libecity-ichiba-picker
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.11.0

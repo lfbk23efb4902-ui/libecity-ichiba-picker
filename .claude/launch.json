@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "market-app",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["/Users/manohirofumi/Documents/Claude Code/リベシティ市場1000円アプリ/app.py"],
+      "port": 5003
+    }
+  ]
+}

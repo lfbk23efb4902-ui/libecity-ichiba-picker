@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ピックアップ結果 | リベシティ市場 予算ピッカー</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --libe-yellow: #F5B000;
+      --libe-orange: #FA6437;
+      --libe-blue:   #3B6FE4;
+      --libe-dark:   #2D2D2D;
+    }
+    * { font-family: 'Noto Sans JP', sans-serif; }
+    body { background: #FFF9EE; }
+
+    /* ── ヘッダー ── */
+    .site-header {
+      background: var(--libe-yellow);
+      padding: .5rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,.12);
+    }
+    .site-header img.logo { height: 28px; }
+    .site-header .badge-picker {
+      background: var(--libe-orange);
+      color: white;
+      font-size: .7rem;
+      font-weight: 700;
+      padding: .2rem .55rem;
+      border-radius: 99px;
+    }
+
+    /* ── ヒーロー（結果用）── */
+    .hero {
+      background: linear-gradient(135deg, var(--libe-orange) 0%, var(--libe-yellow) 60%, #FFE066 100%);
+      padding: 1.5rem 1rem 3.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fff' fill-opacity='0.07'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero h2 {
+      color: white;
+      font-weight: 900;
+      font-size: clamp(1.2rem, 4vw, 1.6rem);
+      text-shadow: 0 2px 8px rgba(0,0,0,.2);
+      position: relative;
+    }
+    .hero p { color: rgba(255,255,255,.9); font-size: .9rem; position: relative; }
+
+    /* ── メインカード ── */
+    .main-card {
+      background: white;
+      border-radius: 1.25rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      padding: 1.5rem;
+      margin-top: -2rem;
+      position: relative;
+    }
+
+    /* ── 予算サマリー ── */
+    .budget-summary {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background: #FFF5EE;
+      border-radius: 1rem;
+      border: 2px solid #FDDCC8;
+      margin-bottom: 1.5rem;
+    }
+    .budget-summary .stat-label { font-size: .72rem; color: #888; margin-bottom: .15rem; }
+    .budget-summary .stat-val { font-weight: 900; }
+    .total-val { font-size: 1.6rem; color: var(--libe-orange); }
+    .remain-val { font-size: 1.3rem; color: #27AE60; }
+    .bar-wrap { background: #E5E5E5; border-radius: 99px; height: 12px; overflow: hidden; }
+    .bar-fill {
+      background: linear-gradient(90deg, var(--libe-orange), var(--libe-yellow));
+      height: 100%;
+      border-radius: 99px;
+      transition: width .8s cubic-bezier(.25,.8,.25,1);
+    }
+    .pct-label { font-size: .75rem; font-weight: 700; color: var(--libe-orange); margin-top: .3rem; text-align: center; }
+
+    /* ── 商品カード ── */
+    .product-card {
+      border: none;
+      border-radius: 1rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      transition: transform .15s, box-shadow .15s;
+      overflow: hidden;
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.14); }
+    .product-img { width: 100%; height: 150px; object-fit: cover; }
+    .product-img-placeholder {
+      width: 100%; height: 150px;
+      background: linear-gradient(135deg, #FFF5EE, #FFE8D6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem;
+    }
+    .price-tag {
+      display: inline-block;
+      background: var(--libe-orange);
+      color: white;
+      font-weight: 900;
+      font-size: .95rem;
+      padding: .2rem .6rem;
+      border-radius: .5rem;
+      margin-bottom: .5rem;
+    }
+    .btn-buy {
+      display: block;
+      background: linear-gradient(135deg, var(--libe-orange), var(--libe-yellow));
+      color: white;
+      font-weight: 700;
+      font-size: .85rem;
+      padding: .45rem;
+      border-radius: .7rem;
+      text-align: center;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .btn-buy:hover { opacity: .85; color: white; }
+
+    /* ── アクションボタン ── */
+    .btn-reroll {
+      background: linear-gradient(135deg, var(--libe-orange), var(--libe-yellow));
+      color: white;
+      border: none;
+      font-weight: 900;
+      font-size: 1rem;
+      padding: .8rem 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 16px rgba(250,100,55,.4);
+      transition: transform .15s;
+      cursor: pointer;
+    }
+    .btn-reroll:hover { transform: translateY(-2px); }
+    .btn-back {
+      background: white;
+      border: 2px solid #E5E5E5;
+      color: #666;
+      font-weight: 700;
+      padding: .8rem 2rem;
+      border-radius: 1rem;
+      text-decoration: none;
+      transition: border-color .15s;
+    }
+    .btn-back:hover { border-color: var(--libe-orange); color: var(--libe-orange); }
+
+    /* ── 空状態 ── */
+    .empty-state { text-align: center; padding: 3rem 1rem; }
+    .empty-state .emoji { font-size: 4rem; }
+
+    section.label { font-size: .75rem; font-weight: 700; color: #999; letter-spacing: .08em; margin-bottom: .75rem; }
+  </style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header class="site-header">
+  <img class="logo" src="https://ichiba.libecity.com/vite/assets/logo-BUgXlR-9.svg" alt="リベシティ市場">
+  <span class="badge-picker">予算ピッカー</span>
+</header>
+
+<!-- ヒーロー -->
+<div class="hero">
+  {% if picks %}
+  <h2>🎉 ¥{{ '{:,}'.format(budget) }} の<br>お買い物セットができました！</h2>
+  <p>{{ picks|length }}点の商品をピックアップ</p>
+  {% else %}
+  <h2>😅 組み合わせが見つかりませんでした</h2>
+  <p>条件を変えて再チャレンジしてみてください</p>
+  {% endif %}
+</div>
+
+<div class="container" style="max-width:960px; padding-bottom:4rem;">
+  <div class="main-card">
+
+    {% if error %}
+    <div class="alert alert-danger rounded-3">{{ error }}</div>
+    {% endif %}
+
+    {% if picks %}
+    <!-- 予算サマリー -->
+    {% set pct = (total / budget * 100) | int %}
+    <div class="budget-summary">
+      <div class="text-center">
+        <div class="stat-label">合計金額</div>
+        <div class="stat-val total-val">¥{{ '{:,}'.format(total) }}</div>
+        <div class="stat-label">/ ¥{{ '{:,}'.format(budget) }}</div>
+      </div>
+      <div>
+        <div class="bar-wrap">
+          <div class="bar-fill" style="width:{{ pct if pct <= 100 else 100 }}%"></div>
+        </div>
+        <div class="pct-label">予算消化率 {{ pct }}%</div>
+      </div>
+      <div class="text-center">
+        <div class="stat-label">おつり</div>
+        <div class="stat-val remain-val">¥{{ '{:,}'.format(budget - total) }}</div>
+      </div>
+    </div>
+
+    <!-- 商品グリッド -->
+    <p class="label">📦 ピックアップ商品</p>
+    <div class="row g-3 mb-4">
+      {% for p in picks %}
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="card product-card h-100">
+          {% if p.image_url %}
+          <img src="{{ p.image_url }}" class="product-img" alt="{{ p.name }}"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="product-img-placeholder" style="display:none">🛍️</div>
+          {% else %}
+          <div class="product-img-placeholder">🛍️</div>
+          {% endif %}
+          <div class="card-body d-flex flex-column p-3">
+            <p class="card-text small flex-grow-1 mb-2" style="line-height:1.5">{{ p.name }}</p>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+              <div class="price-tag">¥{{ '{:,}'.format(p.price) }}</div>
+              {% if p.shipping_included %}
+              <span style="font-size:.72rem; color:#27AE60; font-weight:700;">✓ 送料込み</span>
+              {% elif p.shipping_fee %}
+              <span style="font-size:.72rem; color:#E67E22; font-weight:700;">＋送料 ¥{{ '{:,}'.format(p.shipping_fee) }}</span>
+              {% else %}
+              <span style="font-size:.72rem; color:#999;">送料別</span>
+              {% endif %}
+            </div>
+            {% if not p.shipping_included and p.shipping_fee %}
+            <div style="font-size:.75rem; color:#888;">合計 ¥{{ '{:,}'.format(p.price + p.shipping_fee) }}</div>
+            {% endif %}
+            <a href="{{ p.url }}" target="_blank" rel="noopener" class="btn-buy mt-2">購入する →</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="emoji">🔍</div>
+      <h5 class="mt-3 fw-bold">該当する商品が見つかりませんでした</h5>
+      <p class="text-muted">カテゴリや予算を変えて再チャレンジしてみてください。</p>
+    </div>
+    {% endif %}
+
+    <!-- アクションボタン -->
+    <div class="d-flex flex-wrap gap-3 justify-content-center pt-2">
+      <form method="post" action="/search">
+        <input type="hidden" name="budget" value="{{ budget }}">
+        {% for cat_id in selected_category_ids %}
+        <input type="hidden" name="categories" value="{{ cat_id }}">
+        {% endfor %}
+        {% if target_count %}
+        <input type="hidden" name="count" value="{{ target_count }}">
+        {% endif %}
+        <button type="submit" class="btn-reroll">🎲 もう一度選んでもらう</button>
+      </form>
+      <a href="/" class="btn-back">← 条件を変える</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ローディングオーバーレイ -->
+<div id="loadingOverlay" style="display:none; position:fixed; inset:0; background:rgba(255,249,238,.92); backdrop-filter:blur(4px); z-index:9999; flex-direction:column; align-items:center; justify-content:center; gap:1.5rem;">
+  <div style="display:flex; gap:2rem; align-items:flex-end;">
+    <img class="bounce1" src="https://ichiba.libecity.com/vite/assets/img_parson01-CVCZFRsp.png" alt="" style="height:120px; filter:drop-shadow(0 6px 12px rgba(0,0,0,.15));">
+    <img class="bounce2" src="https://ichiba.libecity.com/vite/assets/img_parson02-D_tRwX7C.png" alt="" style="height:120px; filter:drop-shadow(0 6px 12px rgba(0,0,0,.15));">
+  </div>
+  <div style="font-size:1.2rem; font-weight:700; color:#2D2D2D;">ぴったりな商品を探し中…</div>
+  <div>
+    <span style="display:inline-block;width:10px;height:10px;background:#FA6437;border-radius:50%;margin:0 3px;animation:dot 1.2s ease-in-out infinite;"></span>
+    <span style="display:inline-block;width:10px;height:10px;background:#F5B000;border-radius:50%;margin:0 3px;animation:dot 1.2s ease-in-out .2s infinite;"></span>
+    <span style="display:inline-block;width:10px;height:10px;background:#3B6FE4;border-radius:50%;margin:0 3px;animation:dot 1.2s ease-in-out .4s infinite;"></span>
+  </div>
+</div>
+
+<style>
+  .bounce1 { animation: bounce 0.7s ease-in-out infinite alternate; }
+  @keyframes bounce  { from { transform: translateY(0); }        to { transform: translateY(-24px); } }
+  .bounce2           { animation: bounce2 0.7s ease-in-out .35s infinite alternate; }
+  @keyframes bounce2 { from { transform: scaleX(-1) translateY(0); } to { transform: scaleX(-1) translateY(-24px); } }
+  @keyframes dot { 0%,80%,100% { transform:scale(.6); opacity:.5; } 40% { transform:scale(1.2); opacity:1; } }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.querySelector('form[action="/search"]').addEventListener('submit', () => {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+  });
+</script>
+</body>
+</html>
