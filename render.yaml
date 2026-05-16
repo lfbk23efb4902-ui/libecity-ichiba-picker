@@ -3,7 +3,7 @@ services:
     name: libecity-ichiba-picker
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn app:app --timeout 120 --workers 1
     envVars:
       - key: FLASK_ENV
         value: production

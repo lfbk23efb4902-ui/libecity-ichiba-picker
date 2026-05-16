@@ -124,12 +124,20 @@ def fetch_shipping_fee(product_url: str) -> int:
 
 def enrich_shipping(picks: list) -> list:
     """
-    ピックアップ済みの商品リストに対して、送料別の商品だけ詳細ページを取得して
+    ピックアップ済みの商品リストに対して、送料別の商品だけ詳細ページを並列取得して
     shipping_fee を更新して返す。
     """
-    for p in picks:
-        if not p.get("shipping_included", True):
-            p["shipping_fee"] = fetch_shipping_fee(p["url"])
+    targets = [p for p in picks if not p.get("shipping_included", True)]
+    if not targets:
+        return picks
+
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(fetch_shipping_fee, p["url"]): p for p in targets}
+        for future in as_completed(futures):
+            try:
+                futures[future]["shipping_fee"] = future.result()
+            except Exception:
+                pass
     return picks
 
 
@@ -138,13 +146,13 @@ def _fetch_one_page(cat_id: int, page: int, price_max: int) -> list:
     resp = _session.get(
         f"{BASE_URL}/search",
         params={"category_id": cat_id, "order": "new", "page": page},
-        timeout=15,
+        timeout=8,
     )
     resp.raise_for_status()
     return _parse_page(resp.text, price_max)
 
 
-def fetch_candidates(budget: int, category_ids: list, max_pages: int = 2) -> list:
+def fetch_candidates(budget: int, category_ids: list, max_pages: int = 1) -> list:
     """
     指定カテゴリから budget 以下の商品を候補として収集する。
     カテゴリ×ページを並列取得して高速化。
