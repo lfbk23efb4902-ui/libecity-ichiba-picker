@@ -75,9 +75,14 @@ def _parse_page(html: str, price_max: int) -> list:
             if shipping_tag else True
         )
 
+        # 送料別の場合は見込み送料を加算した実効価格で予算計算する（平均的な送料として500円を見込む）
+        SHIPPING_ESTIMATE = 500
+        effective_price = price if shipping_included else price + SHIPPING_ESTIMATE
+
         products.append({
             "name": name,
             "price": price,
+            "effective_price": effective_price,  # 予算計算用（送料込みの場合はpriceと同じ）
             "image_url": image_url,
             "url": product_url,
             "shipping_included": shipping_included,
@@ -182,25 +187,24 @@ def pick_combination(candidates: list, budget: int, target_count: int = None, tr
         # 個数指定時は1個あたりの上限を budget/count×1.5 に絞って均等に使えるようにする
         if target_count:
             per_item_cap = int(budget / count * 1.5)
-            pool = [p for p in candidates if p["price"] <= per_item_cap]
+            pool = [p for p in candidates if p["effective_price"] <= per_item_cap]
             if len(pool) < count:
-                # 候補が少なければ制限を緩める
-                pool = [p for p in candidates if p["price"] <= budget]
+                pool = [p for p in candidates if p["effective_price"] <= budget]
         else:
-            pool = [p for p in candidates if p["price"] <= budget]
+            pool = [p for p in candidates if p["effective_price"] <= budget]
 
         random.shuffle(pool)
 
         selected = []
         remaining = budget
         for p in pool:
-            if p["price"] <= remaining:
+            if p["effective_price"] <= remaining:
                 selected.append(p)
-                remaining -= p["price"]
+                remaining -= p["effective_price"]
             if len(selected) >= count:
                 break
 
-        total = sum(p["price"] for p in selected)
+        total = sum(p["effective_price"] for p in selected)
         # 個数が指定に近く、予算消化率が高いものを優先
         count_ok = (len(selected) == count) if target_count else (len(selected) >= 2)
         if count_ok and total > best_total:

@@ -56,7 +56,12 @@ def search():
             budgets=BUDGETS,
         )
 
-    total = sum(p["price"] + p.get("shipping_fee", 0) for p in picks)
+    # 実際の送料が判明した商品はそちらを、不明な場合は見込み額（effective_price）を使う
+    total = sum(
+        p["price"] + (p["shipping_fee"] if p["shipping_fee"] > 0 else
+                      (0 if p["shipping_included"] else 500))
+        for p in picks
+    )
     return render_template(
         "result.html",
         picks=picks,
