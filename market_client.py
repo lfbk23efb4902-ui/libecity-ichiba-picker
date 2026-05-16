@@ -95,25 +95,28 @@ def _parse_page(html: str, price_max: int) -> list:
 def fetch_shipping_fee(product_url: str) -> int:
     """
     商品詳細ページから送料を取得して返す。取得できなければ 0。
+    ¥直後の数字のみを抽出して誤パースを防ぐ。
     """
     try:
         resp = _session.get(product_url, timeout=10)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
+
         # 「基本送料 ¥250」形式 → span.txt_tax
         for tag in soup.select("span.txt_tax"):
             text = tag.get_text()
             if "送料" in text:
-                fee = _parse_price(text)
-                if fee and fee > 0:
-                    return fee
+                m = re.search(r'[¥￥]([\d,]+)', text)
+                if m:
+                    return int(m.group(1).replace(",", ""))
+
         # 「基本送料：250円」形式 → p.shippingInfo_text
         for tag in soup.select("p.shippingInfo_text"):
             text = tag.get_text()
             if "送料" in text:
-                fee = _parse_price(text)
-                if fee and fee > 0:
-                    return fee
+                m = re.search(r'(\d[\d,]*)\s*円', text)
+                if m:
+                    return int(m.group(1).replace(",", ""))
     except Exception:
         pass
     return 0
